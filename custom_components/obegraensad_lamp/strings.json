@@ -176,6 +176,33 @@
     },
     "no_message_id": {
       "message": "Give a message_id, or set all to true."
+    },
+    "frame_size": {
+      "message": "A frame needs exactly one value per pixel (256)."
+    },
+    "display_cancelled": {
+      "message": "The temporary display was cancelled ({reason})."
+    },
+    "no_ddp_plugin": {
+      "message": "The lamp's firmware has no DDP plugin, so frames cannot be drawn."
+    },
+    "number_too_long": {
+      "message": "\"{value}\" does not fit on the lamp; use at most 4 characters (digits, - . %)."
+    },
+    "icon_missing": {
+      "message": "Give an icon or a number."
+    },
+    "bad_frame": {
+      "message": "Invalid frame: {error}"
+    },
+    "graph_source_missing": {
+      "message": "Give values or a sensor."
+    },
+    "no_recorder": {
+      "message": "The recorder is not running, so sensor history is unavailable."
+    },
+    "no_history": {
+      "message": "{entity_id} has no numeric history in that window."
     }
   },
   "issues": {
@@ -290,6 +317,146 @@
           "description": "Remove every message this integration has put on the lamp or queued."
         }
       }
+    },
+    "show_icon": {
+      "name": "Show icon",
+      "description": "Shows a built-in 16×16 icon or a number for a while, then returns to the previous plugin.",
+      "fields": {
+        "icon": {
+          "name": "Icon",
+          "description": "Built-in icon."
+        },
+        "number": {
+          "name": "Number",
+          "description": "Instead of an icon: up to 4 characters of digits, minus, point or percent."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Seconds to show it."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Pixel brightness of the icon, 5-255."
+        },
+        "restore": {
+          "name": "Restore",
+          "description": "Return to the previous plugin afterwards. Defaults to the integration option."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "high interrupts a running display; normal and low wait their turn."
+        },
+        "drop_if_busy": {
+          "name": "Drop if busy",
+          "description": "For low priority: skip instead of waiting when something is shown."
+        }
+      }
+    },
+    "draw_frame": {
+      "name": "Draw frame",
+      "description": "Draws any 16×16 picture. Without a duration it stays until something else is shown or Restore display is called.",
+      "fields": {
+        "rows": {
+          "name": "Rows",
+          "description": "16 strings of 16 hex digits, 0 = off, F = full brightness."
+        },
+        "pixels": {
+          "name": "Pixels",
+          "description": "Instead of rows: 256 brightness values 0-255, row by row."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Seconds to show it; leave empty to keep it."
+        },
+        "restore": {
+          "name": "Restore",
+          "description": "Return to the previous plugin afterwards. Defaults to the integration option."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "high interrupts a running display; normal and low wait their turn."
+        },
+        "drop_if_busy": {
+          "name": "Drop if busy",
+          "description": "For low priority: skip instead of waiting when something is shown."
+        }
+      }
+    },
+    "clear": {
+      "name": "Clear display",
+      "description": "Blanks the matrix. With a duration it comes back afterwards; without one it stays dark until Restore display.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Seconds to stay dark."
+        },
+        "restore": {
+          "name": "Restore",
+          "description": "Return to the previous plugin afterwards. Defaults to the integration option."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "high interrupts a running display; normal and low wait their turn."
+        },
+        "drop_if_busy": {
+          "name": "Drop if busy",
+          "description": "For low priority: skip instead of waiting when something is shown."
+        }
+      }
+    },
+    "show_graph": {
+      "name": "Show graph",
+      "description": "Shows numbers or a sensor's history. With a duration as a 16-column bar graph, otherwise scrolled as a line graph.",
+      "fields": {
+        "values": {
+          "name": "Values",
+          "description": "List of numbers, oldest first."
+        },
+        "sensor": {
+          "name": "Sensor",
+          "description": "Instead of values: a numeric sensor whose history is drawn."
+        },
+        "hours": {
+          "name": "Hours",
+          "description": "History window for the sensor."
+        },
+        "min": {
+          "name": "Minimum",
+          "description": "Value drawn at the bottom. Defaults to the lowest value."
+        },
+        "max": {
+          "name": "Maximum",
+          "description": "Value drawn at the top. Defaults to the highest value."
+        },
+        "text": {
+          "name": "Label",
+          "description": "Text scrolled before the line graph (scroll mode only)."
+        },
+        "delay": {
+          "name": "Scroll delay",
+          "description": "Milliseconds per scroll step (scroll mode only)."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Seconds to show the bar graph. Leave empty to scroll instead."
+        },
+        "restore": {
+          "name": "Restore",
+          "description": "Return to the previous plugin afterwards. Defaults to the integration option."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "high interrupts a running display; normal and low wait their turn."
+        },
+        "drop_if_busy": {
+          "name": "Drop if busy",
+          "description": "For low priority: skip instead of waiting when something is shown."
+        }
+      }
+    },
+    "restore_display": {
+      "name": "Restore display",
+      "description": "Ends a temporary display and returns the lamp to the plugin it showed before."
     }
   },
   "selector": {
@@ -306,6 +473,31 @@
         "low": "Low",
         "normal": "Normal",
         "high": "High"
+      }
+    },
+    "icon": {
+      "options": {
+        "door": "Door",
+        "bell": "Bell",
+        "shower": "Shower",
+        "fan": "Fan",
+        "light_bulb": "Light bulb",
+        "warning": "Warning",
+        "check": "Check",
+        "cross": "Cross",
+        "clock": "Clock",
+        "wifi": "Wifi",
+        "thermometer": "Thermometer",
+        "droplet": "Droplet",
+        "bolt": "Bolt",
+        "home": "Home",
+        "person": "Person",
+        "arrow_up": "Arrow up",
+        "arrow_down": "Arrow down",
+        "arrow_left": "Arrow left",
+        "arrow_right": "Arrow right",
+        "heart": "Heart",
+        "smiley": "Smiley"
       }
     }
   }

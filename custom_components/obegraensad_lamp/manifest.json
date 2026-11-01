@@ -1,7 +1,12 @@
 {
   "domain": "obegraensad_lamp",
   "name": "IKEA OBEGRÄNSAD Lamp",
-  "codeowners": ["@BaladiO"],
+  "after_dependencies": [
+    "recorder"
+  ],
+  "codeowners": [
+    "@BaladiO"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/BaladiO/ikea-lamp-hacs-integration",
   "integration_type": "device",

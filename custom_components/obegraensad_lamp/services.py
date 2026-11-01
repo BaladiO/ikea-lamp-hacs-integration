@@ -17,15 +17,22 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 import voluptuous as vol
 
+from . import icons
 from .api import ScheduleItem
 from .const import DOMAIN
 from .coordinator import ObegraensadConfigEntry
+from .history import async_sample_history
 
 SERVICE_SELECT_PLUGIN = "select_plugin"
 SERVICE_SET_BRIGHTNESS_SCHEDULE = "set_brightness_schedule"
 SERVICE_SET_PLUGIN_SCHEDULE = "set_plugin_schedule"
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_REMOVE_MESSAGE = "remove_message"
+SERVICE_SHOW_ICON = "show_icon"
+SERVICE_DRAW_FRAME = "draw_frame"
+SERVICE_CLEAR = "clear"
+SERVICE_SHOW_GRAPH = "show_graph"
+SERVICE_RESTORE_DISPLAY = "restore_display"
 
 ATTR_PLUGIN = "plugin"
 ATTR_ENABLED = "enabled"
@@ -45,6 +52,16 @@ ATTR_MAXY = "maxy"
 ATTR_PRIORITY = "priority"
 ATTR_RESTORE = "restore"
 ATTR_ALL = "all"
+ATTR_ICON = "icon"
+ATTR_ROWS = "rows"
+ATTR_PIXELS = "pixels"
+ATTR_DROP_IF_BUSY = "drop_if_busy"
+ATTR_VALUES = "values"
+ATTR_SENSOR = "sensor"
+ATTR_HOURS = "hours"
+ATTR_MIN = "min"
+ATTR_MAX = "max"
+ATTR_NUMBER = "number"
 
 PRIORITIES = ["low", "normal", "high"]
 MESSAGE_KEY = vol.Any(vol.All(vol.Coerce(int), vol.Range(min=0)), cv.string)
@@ -106,6 +123,58 @@ REMOVE_MESSAGE_SCHEMA = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_MESSAGE_ID, ATTR_ALL),
 )
+
+DISPLAY_FIELDS = {
+    **TARGET_FIELDS,
+    vol.Optional(ATTR_RESTORE): cv.boolean,
+    vol.Optional(ATTR_PRIORITY, default="normal"): vol.In(PRIORITIES),
+    vol.Optional(ATTR_DROP_IF_BUSY, default=False): cv.boolean,
+}
+DURATION = vol.All(vol.Coerce(float), vol.Range(min=0.5, max=86400))
+
+SHOW_ICON_SCHEMA = vol.Schema(
+    {
+        **DISPLAY_FIELDS,
+        vol.Exclusive(ATTR_ICON, "what"): vol.In(sorted(icons.ICONS)),
+        vol.Exclusive(ATTR_NUMBER, "what"): vol.Any(vol.Coerce(float), cv.string),
+        vol.Optional(ATTR_DURATION, default=5): DURATION,
+        vol.Optional(ATTR_BRIGHTNESS, default=255): vol.All(vol.Coerce(int), vol.Range(5, 255)),
+    }
+)
+
+DRAW_FRAME_SCHEMA = vol.Schema(
+    {
+        **DISPLAY_FIELDS,
+        vol.Exclusive(ATTR_ROWS, "frame"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Exclusive(ATTR_PIXELS, "frame"): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 255))]
+        ),
+        vol.Optional(ATTR_DURATION): DURATION,
+    }
+)
+
+CLEAR_SCHEMA = vol.Schema({**DISPLAY_FIELDS, vol.Optional(ATTR_DURATION): DURATION})
+
+SHOW_GRAPH_SCHEMA = vol.Schema(
+    {
+        **DISPLAY_FIELDS,
+        vol.Exclusive(ATTR_VALUES, "source"): vol.All(
+            cv.ensure_list, [vol.Coerce(float)], vol.Length(min=1, max=512)
+        ),
+        vol.Exclusive(ATTR_SENSOR, "source"): cv.entity_id,
+        vol.Optional(ATTR_HOURS, default=24): vol.All(vol.Coerce(float), vol.Range(0.1, 24 * 30)),
+        vol.Optional(ATTR_MIN): vol.Coerce(float),
+        vol.Optional(ATTR_MAX): vol.Coerce(float),
+        vol.Optional(ATTR_TEXT, default=""): cv.string,
+        vol.Optional(ATTR_DELAY): vol.All(vol.Coerce(int), vol.Range(10, 1000)),
+        vol.Optional(ATTR_DURATION): DURATION,
+    }
+)
+
+RESTORE_DISPLAY_SCHEMA = vol.Schema(TARGET_FIELDS)
+
+# graph points scrolled through the message route
+SCROLL_POINTS = 48
 
 
 def resolve_entries(hass: HomeAssistant, call: ServiceCall) -> list[ObegraensadConfigEntry]:
@@ -201,6 +270,99 @@ async def _remove_message(entry: ObegraensadConfigEntry, call: ServiceCall) -> S
     return {"removed": removed}
 
 
+def _invalid(key: str, **placeholders: str) -> ServiceValidationError:
+    return ServiceValidationError(
+        translation_domain=DOMAIN, translation_key=key, translation_placeholders=placeholders
+    )
+
+
+async def _show(
+    entry: ObegraensadConfigEntry,
+    call: ServiceCall,
+    frame: list[int],
+    duration: float | None,
+    label: str,
+) -> ServiceResponse:
+    return await entry.runtime_data.display.async_show(
+        frame,
+        duration=duration,
+        restore=call.data.get(ATTR_RESTORE),
+        priority=call.data[ATTR_PRIORITY],
+        drop_if_busy=call.data[ATTR_DROP_IF_BUSY],
+        label=label,
+    )
+
+
+async def _show_icon(entry: ObegraensadConfigEntry, call: ServiceCall) -> ServiceResponse:
+    brightness = call.data[ATTR_BRIGHTNESS]
+    if ATTR_ICON in call.data:
+        frame = icons.icon_frame(call.data[ATTR_ICON], brightness)
+        label = call.data[ATTR_ICON]
+    elif ATTR_NUMBER in call.data:
+        try:
+            frame = icons.number_frame(call.data[ATTR_NUMBER], brightness)
+        except ValueError as err:
+            raise _invalid("number_too_long", value=str(call.data[ATTR_NUMBER])) from err
+        label = f"number {call.data[ATTR_NUMBER]}"
+    else:
+        raise _invalid("icon_missing")
+    return await _show(entry, call, frame, call.data[ATTR_DURATION], label)
+
+
+async def _draw_frame(entry: ObegraensadConfigEntry, call: ServiceCall) -> ServiceResponse:
+    if ATTR_ROWS in call.data:
+        try:
+            frame = icons.hex_rows_to_frame(call.data[ATTR_ROWS])
+        except ValueError as err:
+            raise _invalid("bad_frame", error=str(err)) from err
+    elif ATTR_PIXELS in call.data:
+        frame = list(call.data[ATTR_PIXELS])
+        if len(frame) != icons.PIXELS:
+            raise _invalid("bad_frame", error=f"need 256 pixels, got {len(frame)}")
+    else:
+        raise _invalid("bad_frame", error="give rows or pixels")
+    return await _show(entry, call, frame, call.data.get(ATTR_DURATION), "frame")
+
+
+async def _clear(entry: ObegraensadConfigEntry, call: ServiceCall) -> ServiceResponse:
+    return await _show(entry, call, icons.blank_frame(), call.data.get(ATTR_DURATION), "clear")
+
+
+async def _show_graph(entry: ObegraensadConfigEntry, call: ServiceCall) -> ServiceResponse:
+    data = entry.runtime_data
+    duration = call.data.get(ATTR_DURATION)
+    points = icons.SIZE if duration is not None else SCROLL_POINTS
+    if ATTR_VALUES in call.data:
+        values: list[float] = list(call.data[ATTR_VALUES])
+    elif ATTR_SENSOR in call.data:
+        values = await async_sample_history(
+            data.coordinator.hass, call.data[ATTR_SENSOR], call.data[ATTR_HOURS], points
+        )
+    else:
+        raise _invalid("graph_source_missing")
+    low, high = call.data.get(ATTR_MIN), call.data.get(ATTR_MAX)
+    if duration is not None:
+        return await _show(entry, call, icons.bar_graph(values, low, high), duration, "graph")
+    # without a duration the graph scrolls through the firmware's message route
+    graph = icons.scale(icons.resample(values, min(len(values), SCROLL_POINTS)), low, high)
+    message = data.messages.build(
+        call.data[ATTR_TEXT],
+        repeat=0,
+        delay=call.data.get(ATTR_DELAY),
+        graph=graph,
+        miny=0,
+        maxy=15,
+        priority=call.data[ATTR_PRIORITY],
+    )
+    if call.data.get(ATTR_RESTORE, True):
+        await data.display.async_release()
+    return await data.messages.async_send(message)
+
+
+async def _restore_display(entry: ObegraensadConfigEntry, call: ServiceCall) -> None:
+    await entry.runtime_data.display.async_release()
+
+
 EntryHandler = Callable[[ObegraensadConfigEntry, ServiceCall], Awaitable[ServiceResponse | None]]
 
 
@@ -240,6 +402,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _send_message,
         SupportsResponse.OPTIONAL,
     )
+    for name, schema, handler in (
+        (SERVICE_SHOW_ICON, SHOW_ICON_SCHEMA, _show_icon),
+        (SERVICE_DRAW_FRAME, DRAW_FRAME_SCHEMA, _draw_frame),
+        (SERVICE_CLEAR, CLEAR_SCHEMA, _clear),
+        (SERVICE_SHOW_GRAPH, SHOW_GRAPH_SCHEMA, _show_graph),
+    ):
+        _register(hass, name, schema, handler, SupportsResponse.OPTIONAL)
+    _register(hass, SERVICE_RESTORE_DISPLAY, RESTORE_DISPLAY_SCHEMA, _restore_display)
     _register(
         hass,
         SERVICE_REMOVE_MESSAGE,

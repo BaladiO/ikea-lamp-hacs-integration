@@ -12,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.obegraensad_lamp.const import DOMAIN, NAME
+from custom_components.obegraensad_lamp.const import CONF_DDP_PORT, DOMAIN, NAME
 
 from .fake_lamp import FakeLamp
 
@@ -35,7 +35,9 @@ async def lamp_server(lamp: FakeLamp, socket_enabled: None) -> AsyncIterator[Tes
     """Serve the fake lamp on 127.0.0.1 (real sockets, localhost only)."""
     server = TestServer(lamp.app(), host="127.0.0.1")
     await server.start_server()
+    await lamp.start_udp()
     yield server
+    lamp.stop_udp()
     await lamp.drop_ws_clients()
     await server.close()
 
@@ -47,9 +49,15 @@ def lamp_host(lamp_server: TestServer) -> str:
 
 
 @pytest.fixture
-def mock_entry(lamp_host: str) -> MockConfigEntry:
+def mock_entry(lamp_host: str, lamp: FakeLamp) -> MockConfigEntry:
     """Config entry pointing at the fake lamp."""
-    return MockConfigEntry(domain=DOMAIN, title=NAME, data={CONF_HOST: lamp_host}, unique_id=MAC_ID)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=NAME,
+        data={CONF_HOST: lamp_host},
+        unique_id=MAC_ID,
+        options={CONF_DDP_PORT: lamp.ddp_port},
+    )
 
 
 async def wait_until(

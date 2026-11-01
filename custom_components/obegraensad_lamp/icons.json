@@ -78,6 +78,21 @@
     },
     "remove_message": {
       "service": "mdi:message-minus"
+    },
+    "show_icon": {
+      "service": "mdi:image-outline"
+    },
+    "draw_frame": {
+      "service": "mdi:draw"
+    },
+    "clear": {
+      "service": "mdi:eraser"
+    },
+    "show_graph": {
+      "service": "mdi:chart-bar"
+    },
+    "restore_display": {
+      "service": "mdi:backup-restore"
     }
   }
 }

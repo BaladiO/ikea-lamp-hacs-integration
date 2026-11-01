@@ -7,6 +7,7 @@ the pool is full, live preview on connect, schedule rules).
 
 from __future__ import annotations
 
+import asyncio
 import copy
 import json
 from typing import Any
@@ -72,6 +73,43 @@ class FakeLamp:
         self.fail_with: int | None = None  # force an HTTP status on every route
         self.missing_routes: set[str] = set()
         self.frame = [0] * 256
+        self.ddp_packets = 0
+        self.ddp_port = 0
+        self._udp: asyncio.DatagramTransport | None = None
+
+    async def start_udp(self) -> int:
+        """Listen for DDP on a free UDP port of 127.0.0.1 and return it."""
+        lamp = self
+
+        class _Protocol(asyncio.DatagramProtocol):
+            def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
+                lamp.ddp_received(data)
+
+        loop = asyncio.get_running_loop()
+        transport, _ = await loop.create_datagram_endpoint(_Protocol, local_addr=("127.0.0.1", 0))
+        self._udp = transport
+        self.ddp_port = transport.get_extra_info("sockname")[1]
+        return self.ddp_port
+
+    def stop_udp(self) -> None:
+        """Close the UDP endpoint."""
+        if self._udp is not None:
+            self._udp.close()
+            self._udp = None
+
+    def ddp_received(self, packet: bytes) -> None:
+        """What DDPPlugin.cpp does, but only while the DDP plugin is active."""
+        if self.info["plugin"] != 39 or len(packet) < 10:
+            return
+        data = packet[10:]
+        count = min(len(data) // 3, 256)
+        values = [sum(data[i * 3 : i * 3 + 3]) // 3 for i in range(count)]
+        values = [v if v > 4 else 0 for v in values]
+        if count == 1:
+            self.frame = values * 256
+        else:
+            self.frame[:count] = values
+        self.ddp_packets += 1
 
     def app(self) -> web.Application:
         """Build the aiohttp application."""

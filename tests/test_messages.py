@@ -11,6 +11,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.obegraensad_lamp import messages as messages_module
 from custom_components.obegraensad_lamp.const import (
+    CONF_DDP_PORT,
     CONF_MAX_LAMP_MESSAGES,
     CONF_MESSAGE_DELAY,
     CONF_MESSAGE_REPEAT,
@@ -46,7 +47,7 @@ def texts(lamp: FakeLamp) -> list[str]:
 
 
 @pytest.fixture
-def mock_entry(lamp_host: str) -> MockConfigEntry:
+def mock_entry(lamp_host: str, lamp: FakeLamp) -> MockConfigEntry:
     """Entry with a small lamp limit so queueing is easy to hit."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -57,6 +58,7 @@ def mock_entry(lamp_host: str) -> MockConfigEntry:
             CONF_MESSAGE_DELAY: 40,
             CONF_MESSAGE_REPEAT: 0,
             CONF_NIGHT_SUPPRESS_LOW: True,
+            CONF_DDP_PORT: lamp.ddp_port,
         },
     )
 

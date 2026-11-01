@@ -135,3 +135,220 @@ remove_message:
       default: false
       selector:
         boolean:
+
+show_icon:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    icon:
+      example: door
+      selector:
+        select:
+          translation_key: icon
+          options:
+            - door
+            - bell
+            - shower
+            - fan
+            - light_bulb
+            - warning
+            - check
+            - cross
+            - clock
+            - wifi
+            - thermometer
+            - droplet
+            - bolt
+            - home
+            - person
+            - arrow_up
+            - arrow_down
+            - arrow_left
+            - arrow_right
+            - heart
+            - smiley
+    number:
+      example: 42
+      selector:
+        text:
+    duration:
+      default: 5
+      selector:
+        number:
+          min: 0.5
+          max: 86400
+          step: 0.5
+          unit_of_measurement: s
+          mode: box
+    brightness:
+      default: 255
+      selector:
+        number:
+          min: 5
+          max: 255
+    restore:
+      selector:
+        boolean:
+    priority:
+      default: normal
+      selector:
+        select:
+          translation_key: priority
+          options:
+            - low
+            - normal
+            - high
+    drop_if_busy:
+      default: false
+      selector:
+        boolean:
+
+draw_frame:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    rows:
+      example: '["0000000000000000", "0FF00000000000F0", "..."]'
+      selector:
+        object:
+    pixels:
+      selector:
+        object:
+    duration:
+      selector:
+        number:
+          min: 0.5
+          max: 86400
+          step: 0.5
+          unit_of_measurement: s
+          mode: box
+    restore:
+      selector:
+        boolean:
+    priority:
+      default: normal
+      selector:
+        select:
+          translation_key: priority
+          options:
+            - low
+            - normal
+            - high
+    drop_if_busy:
+      default: false
+      selector:
+        boolean:
+
+clear:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    duration:
+      selector:
+        number:
+          min: 0.5
+          max: 86400
+          step: 0.5
+          unit_of_measurement: s
+          mode: box
+    restore:
+      selector:
+        boolean:
+    priority:
+      default: normal
+      selector:
+        select:
+          translation_key: priority
+          options:
+            - low
+            - normal
+            - high
+    drop_if_busy:
+      default: false
+      selector:
+        boolean:
+
+show_graph:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    values:
+      example: "[3, 5, 8, 6, 9, 12]"
+      selector:
+        object:
+    sensor:
+      selector:
+        entity:
+          domain: sensor
+    hours:
+      default: 24
+      selector:
+        number:
+          min: 0.1
+          max: 720
+          step: 0.1
+          unit_of_measurement: h
+          mode: box
+    min:
+      selector:
+        number:
+          mode: box
+          step: any
+    max:
+      selector:
+        number:
+          mode: box
+          step: any
+    text:
+      selector:
+        text:
+    delay:
+      selector:
+        number:
+          min: 10
+          max: 1000
+          unit_of_measurement: ms
+          mode: box
+    duration:
+      selector:
+        number:
+          min: 0.5
+          max: 86400
+          step: 0.5
+          unit_of_measurement: s
+          mode: box
+    restore:
+      selector:
+        boolean:
+    priority:
+      default: normal
+      selector:
+        select:
+          translation_key: priority
+          options:
+            - low
+            - normal
+            - high
+    drop_if_busy:
+      default: false
+      selector:
+        boolean:
+
+restore_display:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
