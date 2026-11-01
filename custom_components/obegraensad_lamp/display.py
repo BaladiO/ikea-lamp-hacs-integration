@@ -340,6 +340,9 @@ class DisplayEngine:
             self._session = session
             if data.plugin_id != ddp.id:
                 await coordinator.client.set_plugin(ddp.id)
+                # the firmware answers 200 only once DDP is active, but pushes
+                # nothing after an HTTP switch, so read the state right away
+                await coordinator.async_poll_now()
             await coordinator.async_wait_for(lambda s: s.plugin_id == ddp.id, SWITCH_TIMEOUT)
         except BaseException:
             if self._session is session:

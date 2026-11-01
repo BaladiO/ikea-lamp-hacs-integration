@@ -140,3 +140,25 @@ was probably made outside the tests. Left as is and reported.
   now 0 invalid integrations. The HACS action needs the GitHub repository itself
   (description, topics), so it can only run in CI.
 - 132 tests pass (+4 hardware tests skipped without `LAMP_HOST`).
+
+## Phase 7: Hardening (soak done, 2026-11-01)
+
+Soak against the real lamp, 32 minutes through the Home Assistant harness
+(`tests/hardware/test_soak.py`, samples in `soak-2026-11-01.csv`): 110 cycles of
+notify message + `show_icon` with restore + plugin switch, WebSocket dropped and
+reconnected 11 times.
+
+- 0 errors, lamp uptime 5228 → 7154 s without a reset (no reboot).
+- Free heap first five samples 131 011, last five 130 538 bytes; range 125 668 to
+  136 760, changing with the active plugin (Stars/clock plugins), no downward trend.
+- The starting plugin was restored at the end.
+- Teardown flagged one aiohttp WebSocket heartbeat timer left behind by a test-side
+  forced close (the soak closes the socket from outside the client). It does not
+  repeat and holds no resources; noted as a known test artefact.
+
+Display start: after the HTTP switch to DDP the engine now polls at once instead of
+waiting up to 1 s for a WebSocket push the firmware never sends after HTTP changes.
+
+Fault injection: WebSocket drops verified on hardware (above). Unreachable lamp,
+recovery, the outage repair issue and IP change (reconfigure) are covered by the
+mocked tests; unplugging the real lamp needs a person and was not done.
