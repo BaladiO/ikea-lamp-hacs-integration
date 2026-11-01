@@ -1,0 +1,40 @@
+{
+  "entity": {
+    "button": {
+      "rotate_left": { "default": "mdi:rotate-left" },
+      "rotate_right": { "default": "mdi:rotate-right" },
+      "persist_plugin": { "default": "mdi:pin" }
+    },
+    "number": {
+      "night_brightness": { "default": "mdi:brightness-4" }
+    },
+    "select": {
+      "plugin": { "default": "mdi:view-grid" }
+    },
+    "sensor": {
+      "uptime": { "default": "mdi:timer-outline" },
+      "free_heap": { "default": "mdi:memory" },
+      "reset_reason": { "default": "mdi:restart-alert" },
+      "ip_address": { "default": "mdi:ip-network" }
+    },
+    "switch": {
+      "plugin_schedule": {
+        "default": "mdi:playlist-play",
+        "state": { "off": "mdi:playlist-remove" }
+      },
+      "night_schedule": {
+        "default": "mdi:weather-night",
+        "state": { "off": "mdi:weather-sunny" }
+      }
+    },
+    "time": {
+      "night_start": { "default": "mdi:weather-sunset-down" },
+      "night_end": { "default": "mdi:weather-sunset-up" }
+    }
+  },
+  "services": {
+    "select_plugin": { "service": "mdi:view-grid" },
+    "set_brightness_schedule": { "service": "mdi:weather-night" },
+    "set_plugin_schedule": { "service": "mdi:playlist-play" }
+  }
+}

@@ -1,0 +1,59 @@
+select_plugin:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    plugin:
+      required: true
+      example: Weather
+      selector:
+        text:
+
+set_brightness_schedule:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    enabled:
+      selector:
+        boolean:
+    start:
+      example: "22:00"
+      selector:
+        time:
+    end:
+      example: "07:00"
+      selector:
+        time:
+    brightness:
+      example: 20
+      selector:
+        number:
+          min: 0
+          max: 255
+
+set_plugin_schedule:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    action:
+      default: set
+      selector:
+        select:
+          translation_key: schedule_action
+          options:
+            - set
+            - start
+            - stop
+            - clear
+    schedule:
+      example: '[{"plugin": "Weather", "duration": 60}, {"plugin": "Big Clock", "duration": 30}]'
+      selector:
+        object:

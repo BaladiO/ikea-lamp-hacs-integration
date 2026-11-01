@@ -77,7 +77,7 @@ def test_fill_packet() -> None:
     assert build_fill_packet(200) == DDP_HEADER + bytes([200, 200, 200])
 
 
-@pytest.mark.enable_socket
+@pytest.mark.usefixtures("socket_enabled")
 async def test_sender_delivers_packets() -> None:
     """Packets arrive over UDP unchanged."""
     received: asyncio.Queue[bytes] = asyncio.Queue()

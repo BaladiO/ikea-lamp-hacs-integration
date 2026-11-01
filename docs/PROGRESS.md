@@ -46,6 +46,23 @@ Verified on the real lamp:
 - Free heap went from 103 920 to 98 948 bytes over these switches. To be watched in
   the soak test (Weather re-fetches its data after every re-activation).
 
-## Phase 3: Integration skeleton
+## Phase 3: Integration skeleton (done, 2026-11-01)
+
+- Manifest, config flow (user, reconfigure with same-MAC check, options), coordinator,
+  device (identifiers = MAC), light, plugin select, rotate/persist buttons, plugin and
+  night schedule switches, night brightness number, start/end time entities,
+  diagnostic sensors, connectivity binary sensor, repair issues (long outage,
+  missing `/api/info`), services `select_plugin`, `set_brightness_schedule`,
+  `set_plugin_schedule`.
+- Coordinator: WebSocket pushes update the state at once and entities debounced
+  (200 ms); pushes do not reset the 30 s poll, which is the only source of the
+  diagnostics. Commands use the WebSocket when it is up and HTTP + a poll otherwise.
+- Tests run in Docker (`python:3.14-slim` + `pytest-homeassistant-custom-component
+  0.13.346` = Home Assistant 2026.7.2), the same version as the user's install.
+  55 tests pass; ruff and mypy --strict are clean.
+- Choice: the brief gives both 30 s (5.1) and 60 s (5.7) as poll default; 30 s was
+  taken so the diagnostic sensors stay fresh. One small GET every 30 s is light.
+
+## Phase 4: Notifications
 
 Not started.

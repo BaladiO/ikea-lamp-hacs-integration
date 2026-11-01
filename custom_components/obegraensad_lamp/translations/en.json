@@ -1,0 +1,165 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an IKEA OBEGRÄNSAD lamp",
+        "description": "Enter the IP address or host name of a lamp running the ph1p/ikea-led-obegraensad firmware. A DHCP reservation for the lamp is recommended.",
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "For example 192.168.100.45. The lamp's web interface must open at http://<host>/."
+        }
+      },
+      "reconfigure": {
+        "title": "Change the lamp's address",
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "The new IP address or host name of the same lamp."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the lamp. Check the address and that the lamp is powered and on the network.",
+      "invalid_response": "The device answered, but not like an OBEGRÄNSAD lamp.",
+      "firmware_unsupported": "The lamp's firmware has no /api/info route. Update it to the current ph1p/ikea-led-obegraensad firmware.",
+      "unknown": "Unexpected error, see the log."
+    },
+    "abort": {
+      "already_configured": "This lamp is already configured.",
+      "reconfigure_successful": "The address was updated.",
+      "wrong_device": "That address belongs to a different lamp."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lamp options",
+        "data": {
+          "poll_interval": "Poll interval",
+          "message_delay": "Default scroll delay",
+          "message_repeat": "Default message repeat",
+          "max_lamp_messages": "Messages kept on the lamp at once",
+          "restore": "Restore the previous plugin after a temporary display",
+          "night_suppress_low": "Drop low-priority notifications while the night brightness is active",
+          "ddp_port": "DDP port"
+        },
+        "data_description": {
+          "poll_interval": "How often /api/info is read. Live changes arrive over the WebSocket; the poll refreshes the diagnostic sensors and detects outages.",
+          "message_delay": "Milliseconds per scroll step. Lower is faster.",
+          "message_repeat": "Extra showings after the first, once per minute. -1 repeats until removed.",
+          "max_lamp_messages": "The lamp holds 10 messages and silently drops more. Further messages wait in Home Assistant.",
+          "restore": "Default for the restore option of show_icon, draw_frame, show_graph and clear.",
+          "night_suppress_low": "Uses the lamp's own night brightness schedule.",
+          "ddp_port": "The firmware listens on 4048. Change only for a modified firmware."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "reachable": { "name": "Reachable" }
+    },
+    "button": {
+      "rotate_left": { "name": "Rotate left" },
+      "rotate_right": { "name": "Rotate right" },
+      "persist_plugin": { "name": "Make current plugin the startup plugin" }
+    },
+    "number": {
+      "night_brightness": { "name": "Night brightness" }
+    },
+    "select": {
+      "plugin": { "name": "Plugin" }
+    },
+    "sensor": {
+      "rssi": { "name": "Wi-Fi signal" },
+      "uptime": { "name": "Uptime" },
+      "free_heap": { "name": "Free memory" },
+      "reset_reason": {
+        "name": "Last reset reason",
+        "state": {
+          "poweron": "Power on",
+          "external": "External reset",
+          "software": "Software restart",
+          "panic": "Crash",
+          "int_wdt": "Interrupt watchdog",
+          "task_wdt": "Task watchdog",
+          "wdt": "Watchdog",
+          "deepsleep": "Deep sleep wake-up",
+          "brownout": "Brownout (power dip)",
+          "sdio": "SDIO reset",
+          "unknown": "Unknown"
+        }
+      },
+      "ip_address": { "name": "IP address" }
+    },
+    "switch": {
+      "plugin_schedule": { "name": "Plugin schedule" },
+      "night_schedule": { "name": "Night brightness schedule" }
+    },
+    "time": {
+      "night_start": { "name": "Night brightness start" },
+      "night_end": { "name": "Night brightness end" }
+    }
+  },
+  "exceptions": {
+    "communication_error": { "message": "Could not talk to the lamp: {error}" },
+    "command_rejected": { "message": "The lamp rejected the command: {error}" },
+    "firmware_unsupported": { "message": "The lamp's firmware lacks the required API, please update it." },
+    "websocket_required": { "message": "This command needs the lamp's WebSocket connection, which is down right now." },
+    "not_ready": { "message": "The lamp state is not known yet." },
+    "unknown_plugin": { "message": "The lamp has no plugin named \"{name}\"." },
+    "schedule_times_equal": { "message": "Start and end time of the night schedule must differ." },
+    "schedule_empty": { "message": "The plugin schedule is empty. Set one first." },
+    "no_target": { "message": "No IKEA OBEGRÄNSAD lamp matches the target." }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{title} has been unreachable for a while",
+      "description": "Home Assistant cannot reach the lamp at {host} for more than 30 minutes. Check that it has power and Wi-Fi. If its address changed, give it a DHCP reservation and update the address with **Reconfigure** on the integration page."
+    },
+    "firmware_unsupported": {
+      "title": "Firmware of {title} is too old",
+      "description": "The lamp at {host} has no /api/info route. Flash the current ph1p/ikea-led-obegraensad firmware, then reload the integration."
+    }
+  },
+  "services": {
+    "select_plugin": {
+      "name": "Select plugin",
+      "description": "Switches the lamp to a plugin by name. Stops a running plugin schedule, like the lamp's web interface does.",
+      "fields": {
+        "plugin": { "name": "Plugin", "description": "Plugin name as shown by the Plugin select, e.g. Weather or Big Clock." }
+      }
+    },
+    "set_brightness_schedule": {
+      "name": "Set night brightness schedule",
+      "description": "Changes the lamp's own night brightness schedule. Fields left out keep their current value.",
+      "fields": {
+        "enabled": { "name": "Enabled", "description": "Turns the schedule on or off." },
+        "start": { "name": "Start", "description": "When the night brightness begins." },
+        "end": { "name": "End", "description": "When it ends. May be after midnight." },
+        "brightness": { "name": "Brightness", "description": "Brightness during the night, 0-255." }
+      }
+    },
+    "set_plugin_schedule": {
+      "name": "Set plugin schedule",
+      "description": "Stores a rotation of plugins on the lamp, or starts, stops or clears it.",
+      "fields": {
+        "action": { "name": "Action", "description": "set stores the list and starts it; start, stop and clear act on the stored list." },
+        "schedule": { "name": "Schedule", "description": "List of plugin names with durations in seconds, used by set." }
+      }
+    }
+  },
+  "selector": {
+    "schedule_action": {
+      "options": {
+        "set": "Set and start",
+        "start": "Start",
+        "stop": "Stop",
+        "clear": "Clear"
+      }
+    }
+  }
+}

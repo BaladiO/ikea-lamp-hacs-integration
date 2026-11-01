@@ -15,7 +15,7 @@ from custom_components.obegraensad_lamp.ws_client import LampWebSocket
 
 from .fake_lamp import FakeLamp
 
-pytestmark = pytest.mark.enable_socket
+pytestmark = pytest.mark.usefixtures("socket_enabled")
 
 
 async def wait_for(predicate: Callable[[], bool], timeout: float = 3.0) -> None:

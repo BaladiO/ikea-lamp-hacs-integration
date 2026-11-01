@@ -22,7 +22,7 @@ from custom_components.obegraensad_lamp.api import (
 
 from .fake_lamp import MAC, FakeLamp, default_info
 
-pytestmark = pytest.mark.enable_socket
+pytestmark = pytest.mark.usefixtures("socket_enabled")
 
 
 @pytest.fixture
