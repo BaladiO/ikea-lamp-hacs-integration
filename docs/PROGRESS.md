@@ -63,6 +63,30 @@ Verified on the real lamp:
 - Choice: the brief gives both 30 s (5.1) and 60 s (5.7) as poll default; 30 s was
   taken so the diagnostic sensors stay fresh. One small GET every 30 s is light.
 
-## Phase 4: Notifications
+## Phase 4: Notifications (done, 2026-11-01)
+
+- `text.py`: sanitiser built from the font table in `signs.cpp`. Keeps ASCII 32-126
+  and Ä Ö Ü ß ä ö ü, maps arrows to the font's arrow glyphs, transliterates accents
+  (é → e) and typographic characters, drops emoji and unsupported scripts (e.g.
+  Arabic), collapses whitespace, cuts at 160 characters. Changes are logged at debug.
+- `messages.py`: queue in front of the lamp's pool. At most N messages on the lamp
+  (option, default 4, capped at 8 of the 10 slots), up to 20 more wait in Home
+  Assistant, then a clear "queue full" error. Ids: automatic 1-999, numeric
+  `message_id` n → 1000 + n, text ids hashed into their own range, so the same
+  `message_id` always replaces/removes the same message. Each slot gets an
+  upper-bound lifetime (scroll time + repeats × 60 s + 10 s); at that point the
+  message is removed explicitly, which also covers a lamp whose clock never synced.
+  High priority jumps the queue and may push out the oldest normal finite message;
+  low priority can be dropped while the night brightness is active (option).
+- `notify` entity (`notify.send_message`, title → `TITLE: message`), services
+  `send_message` (with response: status sent/queued/suppressed and lamp id) and
+  `remove_message` (by id, or all).
+- Test note: `async_fire_time_changed` also fires aiohttp's internal timeout timers,
+  which broke real-socket tests (a retried request, then an early expiry), and
+  `freezer` stalls real I/O. The expiry test therefore shrinks the timing constants
+  and runs in real time instead.
+- 82 tests pass (two runs back to back), ruff and mypy --strict clean.
+
+## Phase 5: Display engine
 
 Not started.

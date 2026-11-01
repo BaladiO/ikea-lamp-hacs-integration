@@ -57,3 +57,81 @@ set_plugin_schedule:
       example: '[{"plugin": "Weather", "duration": 60}, {"plugin": "Big Clock", "duration": 30}]'
       selector:
         object:
+
+send_message:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    text:
+      example: DOOR
+      selector:
+        text:
+    repeat:
+      example: 0
+      selector:
+        number:
+          min: -1
+          max: 1000
+          mode: box
+    delay:
+      example: 50
+      selector:
+        number:
+          min: 10
+          max: 1000
+          unit_of_measurement: ms
+          mode: box
+    message_id:
+      example: bathroom
+      selector:
+        text:
+    priority:
+      default: normal
+      selector:
+        select:
+          translation_key: priority
+          options:
+            - low
+            - normal
+            - high
+    restore:
+      default: true
+      selector:
+        boolean:
+    graph:
+      example: "[1, 4, 9, 15, 9, 4, 1]"
+      selector:
+        object:
+    miny:
+      default: 0
+      selector:
+        number:
+          min: -100000
+          max: 100000
+          mode: box
+    maxy:
+      default: 15
+      selector:
+        number:
+          min: -100000
+          max: 100000
+          mode: box
+
+remove_message:
+  target:
+    device:
+      integration: obegraensad_lamp
+    entity:
+      integration: obegraensad_lamp
+  fields:
+    message_id:
+      example: bathroom
+      selector:
+        text:
+    all:
+      default: false
+      selector:
+        boolean:

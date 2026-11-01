@@ -60,23 +60,41 @@
   },
   "entity": {
     "binary_sensor": {
-      "reachable": { "name": "Reachable" }
+      "reachable": {
+        "name": "Reachable"
+      }
     },
     "button": {
-      "rotate_left": { "name": "Rotate left" },
-      "rotate_right": { "name": "Rotate right" },
-      "persist_plugin": { "name": "Make current plugin the startup plugin" }
+      "rotate_left": {
+        "name": "Rotate left"
+      },
+      "rotate_right": {
+        "name": "Rotate right"
+      },
+      "persist_plugin": {
+        "name": "Make current plugin the startup plugin"
+      }
     },
     "number": {
-      "night_brightness": { "name": "Night brightness" }
+      "night_brightness": {
+        "name": "Night brightness"
+      }
     },
     "select": {
-      "plugin": { "name": "Plugin" }
+      "plugin": {
+        "name": "Plugin"
+      }
     },
     "sensor": {
-      "rssi": { "name": "Wi-Fi signal" },
-      "uptime": { "name": "Uptime" },
-      "free_heap": { "name": "Free memory" },
+      "rssi": {
+        "name": "Wi-Fi signal"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "free_heap": {
+        "name": "Free memory"
+      },
       "reset_reason": {
         "name": "Last reset reason",
         "state": {
@@ -93,27 +111,72 @@
           "unknown": "Unknown"
         }
       },
-      "ip_address": { "name": "IP address" }
+      "ip_address": {
+        "name": "IP address"
+      }
     },
     "switch": {
-      "plugin_schedule": { "name": "Plugin schedule" },
-      "night_schedule": { "name": "Night brightness schedule" }
+      "plugin_schedule": {
+        "name": "Plugin schedule"
+      },
+      "night_schedule": {
+        "name": "Night brightness schedule"
+      }
     },
     "time": {
-      "night_start": { "name": "Night brightness start" },
-      "night_end": { "name": "Night brightness end" }
+      "night_start": {
+        "name": "Night brightness start"
+      },
+      "night_end": {
+        "name": "Night brightness end"
+      }
+    },
+    "notify": {
+      "notify": {
+        "name": "Message"
+      }
     }
   },
   "exceptions": {
-    "communication_error": { "message": "Could not talk to the lamp: {error}" },
-    "command_rejected": { "message": "The lamp rejected the command: {error}" },
-    "firmware_unsupported": { "message": "The lamp's firmware lacks the required API, please update it." },
-    "websocket_required": { "message": "This command needs the lamp's WebSocket connection, which is down right now." },
-    "not_ready": { "message": "The lamp state is not known yet." },
-    "unknown_plugin": { "message": "The lamp has no plugin named \"{name}\"." },
-    "schedule_times_equal": { "message": "Start and end time of the night schedule must differ." },
-    "schedule_empty": { "message": "The plugin schedule is empty. Set one first." },
-    "no_target": { "message": "No IKEA OBEGRÄNSAD lamp matches the target." }
+    "communication_error": {
+      "message": "Could not talk to the lamp: {error}"
+    },
+    "command_rejected": {
+      "message": "The lamp rejected the command: {error}"
+    },
+    "firmware_unsupported": {
+      "message": "The lamp's firmware lacks the required API, please update it."
+    },
+    "websocket_required": {
+      "message": "This command needs the lamp's WebSocket connection, which is down right now."
+    },
+    "not_ready": {
+      "message": "The lamp state is not known yet."
+    },
+    "unknown_plugin": {
+      "message": "The lamp has no plugin named \"{name}\"."
+    },
+    "schedule_times_equal": {
+      "message": "Start and end time of the night schedule must differ."
+    },
+    "schedule_empty": {
+      "message": "The plugin schedule is empty. Set one first."
+    },
+    "no_target": {
+      "message": "No IKEA OBEGRÄNSAD lamp matches the target."
+    },
+    "message_empty": {
+      "message": "Nothing to show: the text is empty after removing characters the lamp cannot draw, and no graph was given."
+    },
+    "graph_range": {
+      "message": "maxy must be greater than or equal to miny."
+    },
+    "queue_full": {
+      "message": "Too many messages are waiting for the lamp (limit {count}). Try again later or remove some."
+    },
+    "no_message_id": {
+      "message": "Give a message_id, or set all to true."
+    }
   },
   "issues": {
     "unreachable": {
@@ -130,25 +193,102 @@
       "name": "Select plugin",
       "description": "Switches the lamp to a plugin by name. Stops a running plugin schedule, like the lamp's web interface does.",
       "fields": {
-        "plugin": { "name": "Plugin", "description": "Plugin name as shown by the Plugin select, e.g. Weather or Big Clock." }
+        "plugin": {
+          "name": "Plugin",
+          "description": "Plugin name as shown by the Plugin select, e.g. Weather or Big Clock."
+        }
       }
     },
     "set_brightness_schedule": {
       "name": "Set night brightness schedule",
       "description": "Changes the lamp's own night brightness schedule. Fields left out keep their current value.",
       "fields": {
-        "enabled": { "name": "Enabled", "description": "Turns the schedule on or off." },
-        "start": { "name": "Start", "description": "When the night brightness begins." },
-        "end": { "name": "End", "description": "When it ends. May be after midnight." },
-        "brightness": { "name": "Brightness", "description": "Brightness during the night, 0-255." }
+        "enabled": {
+          "name": "Enabled",
+          "description": "Turns the schedule on or off."
+        },
+        "start": {
+          "name": "Start",
+          "description": "When the night brightness begins."
+        },
+        "end": {
+          "name": "End",
+          "description": "When it ends. May be after midnight."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Brightness during the night, 0-255."
+        }
       }
     },
     "set_plugin_schedule": {
       "name": "Set plugin schedule",
       "description": "Stores a rotation of plugins on the lamp, or starts, stops or clears it.",
       "fields": {
-        "action": { "name": "Action", "description": "set stores the list and starts it; start, stop and clear act on the stored list." },
-        "schedule": { "name": "Schedule", "description": "List of plugin names with durations in seconds, used by set." }
+        "action": {
+          "name": "Action",
+          "description": "set stores the list and starts it; start, stop and clear act on the stored list."
+        },
+        "schedule": {
+          "name": "Schedule",
+          "description": "List of plugin names with durations in seconds, used by set."
+        }
+      }
+    },
+    "send_message": {
+      "name": "Send message",
+      "description": "Scrolls text, optionally followed by a line graph, on the lamp. Messages are queued in Home Assistant so the lamp's small message memory never overflows.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Text to scroll. Characters the lamp's font lacks are transliterated (é → e) or dropped (emoji)."
+        },
+        "repeat": {
+          "name": "Repeat",
+          "description": "Extra showings after the first, once per minute. -1 repeats until the message is removed. Defaults to the integration option."
+        },
+        "delay": {
+          "name": "Scroll delay",
+          "description": "Milliseconds per scroll step. Defaults to the integration option."
+        },
+        "message_id": {
+          "name": "Message ID",
+          "description": "Your name or number for this message. Sending again with the same ID replaces it; use it with Remove message."
+        },
+        "graph": {
+          "name": "Graph",
+          "description": "List of numbers scrolled as a line graph after the text."
+        },
+        "miny": {
+          "name": "Graph minimum",
+          "description": "Value drawn at the bottom of the graph."
+        },
+        "maxy": {
+          "name": "Graph maximum",
+          "description": "Value drawn at the top of the graph."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "high jumps the queue and may push out a normal message; low can be suppressed at night (see options)."
+        },
+        "restore": {
+          "name": "End temporary display",
+          "description": "If an icon or frame is being held on the lamp, end it first so the text is readable."
+        }
+      }
+    },
+    "remove_message": {
+      "name": "Remove message",
+      "description": "Removes a message from the lamp and from the queue.",
+      "fields": {
+        "message_id": {
+          "name": "Message ID",
+          "description": "The ID given to Send message."
+        },
+        "all": {
+          "name": "All",
+          "description": "Remove every message this integration has put on the lamp or queued."
+        }
       }
     }
   },
@@ -159,6 +299,13 @@
         "start": "Start",
         "stop": "Stop",
         "clear": "Clear"
+      }
+    },
+    "priority": {
+      "options": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High"
       }
     }
   }

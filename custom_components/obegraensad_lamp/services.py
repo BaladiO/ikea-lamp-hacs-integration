@@ -24,6 +24,8 @@ from .coordinator import ObegraensadConfigEntry
 SERVICE_SELECT_PLUGIN = "select_plugin"
 SERVICE_SET_BRIGHTNESS_SCHEDULE = "set_brightness_schedule"
 SERVICE_SET_PLUGIN_SCHEDULE = "set_plugin_schedule"
+SERVICE_SEND_MESSAGE = "send_message"
+SERVICE_REMOVE_MESSAGE = "remove_message"
 
 ATTR_PLUGIN = "plugin"
 ATTR_ENABLED = "enabled"
@@ -33,6 +35,19 @@ ATTR_BRIGHTNESS = "brightness"
 ATTR_SCHEDULE = "schedule"
 ATTR_ACTION = "action"
 ATTR_DURATION = "duration"
+ATTR_TEXT = "text"
+ATTR_REPEAT = "repeat"
+ATTR_DELAY = "delay"
+ATTR_MESSAGE_ID = "message_id"
+ATTR_GRAPH = "graph"
+ATTR_MINY = "miny"
+ATTR_MAXY = "maxy"
+ATTR_PRIORITY = "priority"
+ATTR_RESTORE = "restore"
+ATTR_ALL = "all"
+
+PRIORITIES = ["low", "normal", "high"]
+MESSAGE_KEY = vol.Any(vol.All(vol.Coerce(int), vol.Range(min=0)), cv.string)
 
 TARGET_FIELDS = cv.ENTITY_SERVICE_FIELDS
 
@@ -64,6 +79,32 @@ PLUGIN_SCHEDULE_SCHEMA = vol.Schema(
             ],
         ),
     }
+)
+
+SEND_MESSAGE_SCHEMA = vol.Schema(
+    {
+        **TARGET_FIELDS,
+        vol.Optional(ATTR_TEXT, default=""): cv.string,
+        vol.Optional(ATTR_REPEAT): vol.All(vol.Coerce(int), vol.Range(-1, 1000)),
+        vol.Optional(ATTR_DELAY): vol.All(vol.Coerce(int), vol.Range(10, 1000)),
+        vol.Optional(ATTR_MESSAGE_ID): MESSAGE_KEY,
+        vol.Optional(ATTR_GRAPH): vol.All(cv.ensure_list, [vol.Coerce(int)], vol.Length(max=256)),
+        vol.Optional(ATTR_MINY, default=0): vol.Coerce(int),
+        vol.Optional(ATTR_MAXY, default=15): vol.Coerce(int),
+        vol.Optional(ATTR_PRIORITY, default="normal"): vol.In(PRIORITIES),
+        vol.Optional(ATTR_RESTORE, default=True): cv.boolean,
+    }
+)
+
+REMOVE_MESSAGE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **TARGET_FIELDS,
+            vol.Optional(ATTR_MESSAGE_ID): MESSAGE_KEY,
+            vol.Optional(ATTR_ALL, default=False): cv.boolean,
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_MESSAGE_ID, ATTR_ALL),
 )
 
 
@@ -134,13 +175,39 @@ async def _set_plugin_schedule(entry: ObegraensadConfigEntry, call: ServiceCall)
     await coordinator.async_plugin_schedule(action, items)
 
 
+async def _send_message(entry: ObegraensadConfigEntry, call: ServiceCall) -> ServiceResponse:
+    data = entry.runtime_data
+    message = data.messages.build(
+        call.data[ATTR_TEXT],
+        repeat=call.data.get(ATTR_REPEAT),
+        delay=call.data.get(ATTR_DELAY),
+        graph=call.data.get(ATTR_GRAPH),
+        miny=call.data[ATTR_MINY],
+        maxy=call.data[ATTR_MAXY],
+        priority=call.data[ATTR_PRIORITY],
+        key=call.data.get(ATTR_MESSAGE_ID),
+    )
+    if call.data[ATTR_RESTORE]:
+        # text cannot be read over a held DDP frame, so end it first
+        await data.display.async_release()
+    return await data.messages.async_send(message)
+
+
+async def _remove_message(entry: ObegraensadConfigEntry, call: ServiceCall) -> ServiceResponse:
+    key = None if call.data[ATTR_ALL] else call.data.get(ATTR_MESSAGE_ID)
+    if key is None and not call.data[ATTR_ALL]:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_message_id")
+    removed = await entry.runtime_data.messages.async_remove(key)
+    return {"removed": removed}
+
+
 EntryHandler = Callable[[ObegraensadConfigEntry, ServiceCall], Awaitable[ServiceResponse | None]]
 
 
 def _register(
     hass: HomeAssistant,
     name: str,
-    schema: vol.Schema,
+    schema: vol.Schema | vol.All,
     handler: EntryHandler,
     supports_response: SupportsResponse = SupportsResponse.NONE,
 ) -> None:
@@ -166,3 +233,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass, SERVICE_SET_BRIGHTNESS_SCHEDULE, BRIGHTNESS_SCHEDULE_SCHEMA, _set_brightness_schedule
     )
     _register(hass, SERVICE_SET_PLUGIN_SCHEDULE, PLUGIN_SCHEDULE_SCHEMA, _set_plugin_schedule)
+    _register(
+        hass,
+        SERVICE_SEND_MESSAGE,
+        SEND_MESSAGE_SCHEMA,
+        _send_message,
+        SupportsResponse.OPTIONAL,
+    )
+    _register(
+        hass,
+        SERVICE_REMOVE_MESSAGE,
+        REMOVE_MESSAGE_SCHEMA,
+        _remove_message,
+        SupportsResponse.OPTIONAL,
+    )

@@ -21,5 +21,8 @@ class DisplayEngine:
         self.entry = entry
         self.coordinator = coordinator
 
+    async def async_release(self) -> None:
+        """End a held temporary display so the plugin shows again."""
+
     async def async_stop(self) -> None:
         """Cancel any display and restore the lamp."""
