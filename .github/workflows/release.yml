@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check that the tag matches manifest.json
+        run: |
+          version=$(python3 -c "import json;print(json.load(open('custom_components/obegraensad_lamp/manifest.json'))['version'])")
+          test "v${version}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != manifest ${version}"; exit 1; }
+      - name: Build zip
+        run: cd custom_components/obegraensad_lamp && zip -r ../../obegraensad_lamp.zip . -x "__pycache__/*"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          awk -v v="${GITHUB_REF_NAME#v}" '$0 ~ "^## \[?"v {f=1; next} /^## / && f {exit} f' CHANGELOG.md > notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: obegraensad_lamp.zip
+          body_path: notes.md

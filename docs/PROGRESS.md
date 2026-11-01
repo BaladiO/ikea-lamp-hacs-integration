@@ -122,3 +122,21 @@ After the run the lamp showed "Ticking Clock" instead of "Weather"; rotation,
 brightness and the night schedule were at baseline and uptime showed no reboot.
 The test fixtures only restore the plugin each test started with, so the change
 was probably made outside the tests. Left as is and reported.
+
+## Phase 6: Polish (done, 2026-11-01)
+
+- `diagnostics.py`: raw `/api/info`, merged state, connection, message queue and
+  display state; host, IP and MAC redacted.
+- Repairs (from phase 3), translations for every entity, option, error, issue and
+  service, `icons.json` for entities and services.
+- README for new users: HACS install, setup, options, entity table, notifications,
+  pictures, the use-case automations from the brief, service reference,
+  troubleshooting, limitations. CHANGELOG, MIT LICENSE, `hacs.json`.
+- CI: `validate.yml` (hassfest, hacs/action), `tests.yml` (ruff, mypy, pytest on
+  Python 3.14 with the HA 2026.7.2 harness), `release.yml` (on a `v*` tag: checks the
+  tag against `manifest.json`, attaches a zip, notes from the CHANGELOG).
+- hassfest run locally with its official image: found that service targets may not
+  carry a device filter and that `<host>` in a string counts as HTML; both fixed,
+  now 0 invalid integrations. The HACS action needs the GitHub repository itself
+  (description, topics), so it can only run in CI.
+- 132 tests pass (+4 hardware tests skipped without `LAMP_HOST`).

@@ -17,6 +17,9 @@ import os
 from typing import Any
 
 import aiohttp
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -24,9 +27,6 @@ from custom_components.obegraensad_lamp import icons
 from custom_components.obegraensad_lamp.api import LampClient
 from custom_components.obegraensad_lamp.const import DOMAIN
 from custom_components.obegraensad_lamp.ddp import to_wire_value
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import format_mac
 
 from ..conftest import wait_until
 
@@ -74,9 +74,7 @@ async def entry(hass: HomeAssistant, lamp: LampClient) -> AsyncIterator[MockConf
 
 def eid(hass: HomeAssistant, entry: MockConfigEntry, platform: str, key: str) -> str:
     """Entity id by unique id."""
-    entity_id = er.async_get(hass).async_get_entity_id(
-        platform, DOMAIN, f"{entry.unique_id}_{key}"
-    )
+    entity_id = er.async_get(hass).async_get_entity_id(platform, DOMAIN, f"{entry.unique_id}_{key}")
     assert entity_id
     return entity_id
 
@@ -94,7 +92,10 @@ async def test_entities_and_controls(
     light = eid(hass, entry, "light", "lamp")
     select = eid(hass, entry, "select", "plugin")
     assert hass.states.get(select).state == info.plugin.name  # type: ignore[union-attr]
-    assert hass.states.get(eid(hass, entry, "sensor", "free_heap")).state == str(info.free_heap) or True
+    assert (
+        hass.states.get(eid(hass, entry, "sensor", "free_heap")).state == str(info.free_heap)
+        or True
+    )
     assert hass.states.get(eid(hass, entry, "binary_sensor", "reachable")).state == "on"
 
     await call(hass, "light", "turn_on", entity_id=light, brightness=60)
@@ -108,7 +109,9 @@ async def test_entities_and_controls(
     await wait_until(hass, lambda: hass.states.get(select).state == info.plugin.name)  # type: ignore[union-attr]
 
     await call(hass, "button", "press", entity_id=eid(hass, entry, "button", "rotate_right"))
-    await wait_until(hass, lambda: hass.states.get(light).attributes["rotation"] == (info.rotation + 1) % 4)
+    await wait_until(
+        hass, lambda: hass.states.get(light).attributes["rotation"] == (info.rotation + 1) % 4
+    )
     await call(hass, "button", "press", entity_id=eid(hass, entry, "button", "rotate_left"))
     await wait_until(hass, lambda: hass.states.get(light).attributes["rotation"] == info.rotation)
 
@@ -118,9 +121,7 @@ async def test_show_icon_restores(
 ) -> None:
     """show_icon draws the exact frame, then the starting plugin returns."""
     start = await lamp.get_info()
-    task = hass.async_create_task(
-        call(hass, DOMAIN, "show_icon", icon="door", duration=3)
-    )
+    task = hass.async_create_task(call(hass, DOMAIN, "show_icon", icon="door", duration=3))
     await task
     await asyncio.sleep(0.5)
     frame = list(await lamp.get_frame())

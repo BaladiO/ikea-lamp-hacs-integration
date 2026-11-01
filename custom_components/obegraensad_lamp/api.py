@@ -294,12 +294,16 @@ class LampClient:
             raise LampCommandError(message or f"HTTP {status}", status)
         return data
 
-    async def get_info(self) -> LampState:
-        """Fetch the full state."""
+    async def get_info_raw(self) -> dict[str, Any]:
+        """Fetch ``/api/info`` unparsed (for diagnostics)."""
         data = await self._request("GET", "/api/info")
         if not isinstance(data, dict):
             raise LampResponseError("/api/info did not return an object")
-        return LampState.from_info(data)
+        return data
+
+    async def get_info(self) -> LampState:
+        """Fetch the full state."""
+        return LampState.from_info(await self.get_info_raw())
 
     async def get_frame(self) -> bytes:
         """Return the current frame, one brightness byte per pixel."""
