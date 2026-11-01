@@ -1,0 +1,1 @@
+"""IKEA OBEGRÄNSAD Lamp integration."""

@@ -26,6 +26,26 @@
 - Every plugin switch flashes the plugin id for 800 ms, which is visible when a
   temporary display starts and ends. This cannot be avoided without firmware changes.
 
-## Phase 2: Core client
+## Phase 2: Core client (done, 2026-11-01)
+
+- `api.py` (HTTP client, typed errors, serialised requests with 100 ms gap, retries on
+  connection errors), `ws_client.py` (one socket, live-preview opt-out, backoff to
+  60 s), `ddp.py` (packet builder, UDP sender). None of them import Home Assistant.
+- `tests/fake_lamp.py` mimics the firmware for tests. 30 tests, coverage api 96 %,
+  ddp 100 %, ws_client 94 %. ruff and mypy --strict clean.
+- `scripts/lampctl.py` for manual checks.
+
+Verified on the real lamp:
+
+- `info`, `frame`, `watch` via the CLI.
+- DDP: switched to plugin DDP (the switch takes ~1 s including the 800 ms id
+  display), sent a full frame over UDP, read `/api/data` back: byte-exact match,
+  including a faint value 3 shown as 5. `fill(0)` blanks the matrix. Restored Weather.
+- `/api/message` with id 101: the text scrolled (6 distinct frames in 3 s), so the
+  lamp clock is synced. Removed afterwards.
+- Free heap went from 103 920 to 98 948 bytes over these switches. To be watched in
+  the soak test (Weather re-fetches its data after every re-activation).
+
+## Phase 3: Integration skeleton
 
 Not started.
