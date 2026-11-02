@@ -20,7 +20,14 @@ jobs:
         run: cd custom_components/obegraensad_lamp && zip -r ../../obegraensad_lamp.zip . -x "__pycache__/*"
       - name: Release notes from CHANGELOG.md
         run: |
-          awk -v v="${GITHUB_REF_NAME#v}" '$0 ~ "^## \[?"v {f=1; next} /^## / && f {exit} f' CHANGELOG.md > notes.md
+          python3 - "${GITHUB_REF_NAME#v}" <<'EOF'
+          import re, sys
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          match = re.search(rf"^## \[?{re.escape(sys.argv[1])}\]?.*?\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+          if not match:
+              sys.exit(f"no CHANGELOG entry for {sys.argv[1]}")
+          open("notes.md", "w", encoding="utf-8").write(match.group(1).strip() + "\n")
+          EOF
       - uses: softprops/action-gh-release@v2
         with:
           files: obegraensad_lamp.zip

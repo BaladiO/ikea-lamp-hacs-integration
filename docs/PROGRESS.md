@@ -162,3 +162,13 @@ waiting up to 1 s for a WebSocket push the firmware never sends after HTTP chang
 Fault injection: WebSocket drops verified on hardware (above). Unreachable lamp,
 recovery, the outage repair issue and IP change (reconfigure) are covered by the
 mocked tests; unplugging the real lamp needs a person and was not done.
+
+## Phase 8: Release (v0.1.0, 2026-11-02)
+
+- Repository topics set, so the HACS action passes with hassfest, lint and tests on
+  `main`.
+- Tag `v0.1.0` pushed. The release run failed in the notes step (an awk regex with
+  `\[` in a string, rejected by mawk). The step now uses Python and was tested in the
+  container; the release still has to be cut from a tag on the fixed commit.
+- The release workflow checks the tag against `manifest.json`, attaches
+  `obegraensad_lamp.zip` and takes the notes from `CHANGELOG.md`.
